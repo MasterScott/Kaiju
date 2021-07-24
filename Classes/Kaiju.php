@@ -12,6 +12,7 @@ class Kaiju
 
     # This is to save user information after login
     public $UserInfo = null;
+    public $VerificationKey = null;
 
     protected $DiscordScope = "guilds.join identify";
     protected $DiscordOAuthUrl = "https://discordapp.com/oauth2/authorize";
@@ -52,10 +53,7 @@ class Kaiju
             return true;
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage(), (int)$e->getCode());
-            return false;
         }
-
-        return false;
     }
 
     /**
@@ -87,7 +85,7 @@ class Kaiju
     /**
      * @throws Exception
      */
-    public function LogIn($_get) : bool
+    public function LogIn($_get): bool|string
     {
         if ($this->pdoConnection == null) {
             throw new PDOException("You must connect the database, please check the documentation in the Kaiju repository for more information.");
@@ -95,7 +93,7 @@ class Kaiju
 
         if (!isset($_SESSION['csrf_token'])
         || $_SESSION['csrf_token'] !== $_get['state']) {
-            return false;
+            return "Invalid CSRF-Token @ Try reload the page.";
         }
 
         $Url = $this->DiscordUrl . '/api/oauth2/token';
@@ -123,20 +121,36 @@ class Kaiju
 
             $this->UserInfo = $this->GetUserDiscordInformation();
 
-            # Adding user to the Database
+            # Searching if the user is already verified on the server
 
-            $VerificationCode = $this->generateRandomString();
+            $UserCountQuery = $this->pdoConnection->prepare('SELECT COUNT(*) FROM users WHERE account_id = ?');
 
-            $InsertAccount = $this->pdoConnection->prepare('INSERT INTO users (access_token, verification_code, account_id) VALUES (?,?,?)');
+            if (!$UserCountQuery->execute([$this->UserInfo['Id']])) {
+                throw new PDOException('Error searching the user on the database');
+            }
 
-            if (!$InsertAccount->execute([$this->accessToken, $VerificationCode, $this->UserInfo['Id']])) {
-                throw new PDOException('Error adding the discord account');
+            if ($UserCountQuery->fetchColumn() < 1) { # User is not verified yet
+
+                # Adding user to the Database
+
+                $VerificationCode = $this->generateRandomString();
+
+                $InsertAccount = $this->pdoConnection->prepare('INSERT INTO users (access_token, verification_code, account_id) VALUES (?,?,?)');
+
+                if (!$InsertAccount->execute([$this->accessToken, $VerificationCode, $this->UserInfo['Id']])) {
+                    throw new PDOException('Error adding the discord account');
+                }
+
+                $this->VerificationKey = $VerificationCode;
+
+            } else { # Already verified
+                return "You are already verified on the server!";
             }
 
             return true;
         }
 
-        return false;
+        return "A problem has occurred, please try again.";
     }
 
     /**

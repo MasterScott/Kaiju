@@ -9,19 +9,16 @@ $KaijuHandler = new Kaiju(Client_Id, RedirectUrl, Secret_Id);
 
 $DBConnect = $KaijuHandler->ConnectDatabase(DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
 
-if (!$DBConnect) {
-    die('Need Database Connection');
-}
-
 $errorMessage = null;
 $IsLogged = false;
 
 if (isset($_GET['code']) && isset($_GET['state']))
 {
-    $KaijuLogIn = $KaijuHandler->LogIn($_GET);
+    $KaijuLogInResponse = $KaijuHandler->LogIn($_GET);
 
-    if ($KaijuLogIn) {
-
+    if (!is_bool($KaijuLogInResponse)) { # If it returns a string, it means that an error occurred.
+        $errorMessage = $KaijuLogInResponse;
+    } else {
         $userInfo = $KaijuHandler->GetUserInfo();
 
         # With this Token you can make the user enter a server, this can be used in case your server is suspended
@@ -33,20 +30,14 @@ if (isset($_GET['code']) && isset($_GET['state']))
         $AvatarUrl = $userInfo['AvatarUrl'];
         $Locale = $userInfo['Locale'];
 
-        $IsLogged = true;
-    }
-    else {
+        $VerificationKey = $KaijuHandler->VerificationKey;
 
-        // Failed log in
-        $errorMessage = 'Please refresh the page to try again.';
+        $IsLogged = true;
     }
 }
 else {
     try {
         $LogInUrl = $KaijuHandler->GenerateUrl();
-    }
-    catch (NullBotParameter $e) { # will throw this exception if a bot configuration is missing
-        $errorMessage = $e->getMessage(); # Custom Message
     }
     catch (Exception $e) {
         echo $e->getMessage();
@@ -56,7 +47,7 @@ else {
 ?>
 
 
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,7 +55,7 @@ else {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
 
-    <title>Discord LogIn</title>
+    <title>Discord Verification</title>
 </head>
 
 <body style="background-color: #101010">
@@ -116,46 +107,61 @@ else {
     <ol>
         <li>Login with discord through this page (check the login link: https://discord.com/).</li>
         <li>After logging in with the account you want to verify, a unique token will appear, copy that key.</li>
-        <li>Join on the server and type <i>>verify Your Token</i> in the verification channel.</li>
+        <li>Join on the server and type <i>!verify <b>Your Token</b></i> in the verification channel.</li>
         <li>You will already be verified on the server! Remember to follow the rules imposed on it.</li>
     </ol>
 </h4>
 
 <br />
 
-<center>
+<div style="text-align: center;">
 
     <?php if ($IsLogged): ?>
 
-        <h3>Logged In!</h3>
-        <p>Username: <?php echo $Username; ?></p>
-        <p>Discrim: <?php echo $Discriminator; ?></p>
-        <p>AccountId: <?php echo $accountId; ?></p>
-        <p>Avatar Url: <?php echo $AvatarUrl; ?></p>
-        <p>Locale: <?php echo $Locale; ?></p>
+    <h3>Logged in successfully!</h3>
+
+    <?php
+    /*
+     * If you make your own verification page,
+     * you can use these variables and show it
+     * to the client after logging in.
+     *
+    <p>Username: <?php echo $Username; ?></p>
+    <p>Discrim: <?php echo $Discriminator; ?></p>
+    <p>AccountId: <?php echo $accountId; ?></p>
+    <p>Avatar Url: <?php echo $AvatarUrl; ?></p>
+    <p>Locale: <?php echo $Locale; ?></p>
+    */
+    ?>
+
+    <p>Verification Token: <?php echo $VerificationKey; ?></p>
+
+    <br />
+
+    <p>Join in the discord server and type the command '<i>!verify <?php echo $VerificationKey; ?></i>' in the verification channel.</p>
 
     <?php elseif ($errorMessage == null): ?>
 
-        <h3><a href="<?php echo $LogInUrl ?>">Click Here to Log In</a></h3>
+    <h3><a href="<?php echo $LogInUrl ?>">Click Here to Log In</a></h3>
 
-        <br />
+    <br />
 
-        <p>
-            Kaiju will only collect your profile information (Id, Username, Discriminator) <br />
-            and the permission to put your account on a server, this is only for special <br />
-            cases in which the server you are logged into is suspended.
-        </p>
+    <p>
+        Kaiju will only collect your profile information (Id, Username, Discriminator) <br />
+        and the permission to put your account on a server, this is only for special <br />
+        cases in which the server you are logged into is suspended.
+    </p>
 
     <?php else: ?>
 
-        <p>Error: <?php echo $errorMessage ?></p>
+    <p>Error: <?php echo $errorMessage ?></p>
 
     <?php endif ?>
 
     <br />
     <br />
 
-</center>
+</div>
 
 <div class="footer">
     <p>Kaiju 1.0.0 - <a href="https://github.com/biitez/Kaiju" target="_blank">See it on GitHub</a></p>
