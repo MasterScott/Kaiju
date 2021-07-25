@@ -7,7 +7,12 @@ require_once 'Include.php';
 
 $KaijuHandler = new Kaiju(Client_Id, RedirectUrl, Secret_Id);
 
-$DBConnect = $KaijuHandler->ConnectDatabase(DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
+# Important
+$KaijuHandler->ConnectDatabase(
+        DATABASE_HOST,
+        DATABASE_NAME,
+        DATABASE_USERNAME,
+        DATABASE_PASSWORD);
 
 $errorMessage = null;
 $IsLogged = false;
@@ -16,7 +21,7 @@ if (isset($_GET['code']) && isset($_GET['state']))
 {
     $KaijuLogInResponse = $KaijuHandler->LogIn($_GET);
 
-    if (!is_bool($KaijuLogInResponse)) { # If it returns a string, it means that an error occurred.
+    if (!is_bool($KaijuLogInResponse)) { # If it returns a string, it means that an error occurred
         $errorMessage = $KaijuLogInResponse;
     } else {
         $userInfo = $KaijuHandler->GetUserInfo();
@@ -102,7 +107,7 @@ else {
 <br />
 <br />
 
-<h3 align="center">Steps to log into the server: Discord Server Test:</h3>
+<h3 align="center">Steps to log into <?php echo DiscordServerName; ?></h3>
 <h4 class="center">
     <ol>
         <li>Login with discord through this page (check the login link: https://discord.com/).</li>
