@@ -20,14 +20,89 @@ The user must enter a website (which can be modified using the instructions belo
 
 
 ### Concepts
-- [Steps](#steps)
+- [PHP API Discord User Web Login](#api-discord-web-login)
+- [Steps to integrate Kaiju In your Server](#steps-to-integrate-Kaiju)
 - [Intructions for Hosting the Discord Bot](#intructions-discord-bot)
 - [Screenshots](#screenshots)
 - [Extra](#extra)
 - [Credits](#Credits)
 
 
-### Steps
+
+## API Discord Web Login
+
+I made a page where they use the classes to start the session and obtain the verification key (https://github.com/biitez/Kaiju/blob/master/Kaiju%20Server%20Files/index.php), 
+But if you want to make your own page using Kaiju classes, here you can find the functions that you can use:
+
+First, you must open a session in the first line of the page and include Kaiju.php and Include.php, like this:
+
+```php
+session_start();
+
+require_once 'Classes/Kaiju.php';
+require_once 'Include.php';
+```
+
+Initialize the Kaiju class, setting what you put in Inlude.php as a parameter, like this:
+
+```php
+$KaijuHandler = new Kaiju(Client_Id, RedirectUrl, Secret_Id);
+```
+
+You must connect the database to the initialized function, like this:
+
+```php
+$KaijuHandler->ConnectDatabase(DATABASE_HOST, DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
+```
+
+To obtain the URL where the user must be redirected to log in through discord, you must call:
+
+```php
+$DiscordUrlLogin = $KaijuHandler->GenerateUrl();
+```
+
+For the 'callback' after the user logs in from the previously generated page, it will be redirected to the link that you put in the OAuth of your application on the Discord page along with some query parameters, to receive it, you must write this:
+
+```php
+$KaijuLogInResponse = $KaijuHandler->LogIn($_GET);
+```
+
+The login method returns a BOOL if the login was correct and a STRING if it was incorrect, you can handle it this way:
+
+```php
+if (is_bool($KaijuLogInResponse)) {
+  # Succcessfully Logged
+} else {
+  echo "Error: $KaijuLogInResponse";
+}
+```
+
+If the login was correct, you can get the user's basic information (Id, Nombre, Discriminator, Avatar, Access Token)
+
+PD: Access Token is stored from Kaiju class in database
+
+```php
+$userInfo = $KaijuHandler->GetUserInfo();
+```
+
+```php
+$AccessToken = $userInfo['accessToken'];
+
+$Username = $userInfo['Username'];
+$Discriminator = $userInfo['Discrim'];
+$accountId = $userInfo['Id'];
+$AvatarUrl = $userInfo['AvatarUrl'];
+$Locale = $userInfo['Locale'];
+```
+
+
+To obtain the verification code that the user must write in the discord command, you must call the initialization, like this:
+
+```php
+$VerificationKey = $KaijuHandler->VerificationKey;
+```
+
+### Steps to integrate Kaiju
 
 1. Create an application in the application portal of your account (https://discord.com/developers/applications)
 
@@ -89,15 +164,15 @@ In the `KaijuSecretKeyCommunication` space, put the password placed in Include.p
 
 Extra: Any error will appear in the console.
 
-- [Windows](#bot-windows)
-- [Ubuntu](#bot-ubuntu)
+- [Windows](#Discord-bot-windows)
+- [Ubuntu](#Discord-bot-ubuntu)
 
-## Windows
+## Discord Bot Windows
 
 To host the bot on Windows, make sure you have downloaded `.NET Core Runtime 3.1+` (https://dotnet.microsoft.com/download/dotnet/3.1/runtime), After downloading it, just open the file `Kaiju.DiscordBot.exe`and your bot will start.
 
 
-## Ubuntu
+## Discord Bot Ubuntu
 
 To host it in Ubuntu, you will need to put commands in the CLI,
 
