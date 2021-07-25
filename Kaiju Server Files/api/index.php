@@ -2,6 +2,7 @@
 
 require_once '../Include.php';
 require_once '../Classes/DatabaseControl.php';
+require_once '../Classes/KaijuMethods.php';
 
 header('Content-Type: application/json');
 
@@ -25,7 +26,8 @@ if ($RequestMethod == "POST") {
     # If you want to extend this API, here you can put the methods you want to handle from the Discord bot.
     $AvailablesMethods = array(
         'REMOVE_USER',
-        'VERIFY_USER'
+        'VERIFY_USER',
+        'MIGRATE_USERS'
     );
 
     $KaijuMethod = $_POST['Method'];
@@ -43,6 +45,51 @@ if ($RequestMethod == "POST") {
 
     # Here you can add your owns API management
     switch ($KaijuMethod) {
+        case 'MIGRATE_USERS': # Move all users on the database to the new server
+
+            if (!isset($_POST['ServerId'])) {
+                JsonPrint('SERVER_ID_REQUIRED', 400);
+            }
+
+            if (empty(Bot_Token)) {
+                JsonPrint('BAD_TOKEN_DISCORD_BOT_INCLUDED', 404);
+            }
+
+            $TotalUsers = $DatabaseConnection->prepare('SELECT COUNT(*) FROM users');
+
+            if (!$TotalUsers->execute()) {
+                JsonPrint('INTERNAL_DATABASE_ERROR', 500);
+            }
+
+            $TotalUsersCount = $TotalUsers->fetchColumn();
+
+            if ($TotalUsersCount < 1) {
+                JsonPrint('NO_USERS', 404);
+            }
+
+            $MethodInitialization = new KaijuMethods(Bot_Token, $_POST['ServerId']);
+
+            $GetAllUsersQuery = $DatabaseConnection->prepare('SELECT access_token,account_id FROM users');
+
+            $Success = 0;
+            $Fails = 0;
+
+            $GetAllUsersQuery->execute();
+
+            while ($dbRow = $GetAllUsersQuery->fetch(PDO::FETCH_NUM)) {
+                if (empty($dbRow[0]) || empty($dbRow[1])) continue;
+                if ($MethodInitialization->JoinGuild($dbRow[0], $dbRow[1])) {
+                    $Success++;
+                } else {
+                    $Fails++;
+                }
+            }
+
+            # Check the status code to handle this
+            JsonPrint("$TotalUsersCount|$Success|$Fails", 200);
+
+            break;
+
         case 'REMOVE_USER':
             $RemoveUserQuery = $DatabaseConnection->prepare('DELETE FROM users WHERE account_id = ?');
             if (!$RemoveUserQuery->execute([$DiscordUserId])) {

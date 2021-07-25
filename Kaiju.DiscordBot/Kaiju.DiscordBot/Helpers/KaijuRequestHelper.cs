@@ -13,7 +13,7 @@ namespace Kaiju.DiscordBot.Helpers
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static async Task<KaijuAPIResponseModel> SendRequestAsync(KaijuAPIMethods Method, ulong UserId, string VerificationToken = null)
+        public static async Task<KaijuAPIResponseModel> SendRequestAsync(KaijuAPIMethods Method, ulong UserId, string VerificationToken = null, string ServerId = null)
         {
             var BodyParams = new Dictionary<string, string>
             {
@@ -25,6 +25,11 @@ namespace Kaiju.DiscordBot.Helpers
             if (VerificationToken != null)
             {
                 BodyParams.Add("Token", VerificationToken);
+            }
+
+            if (ServerId != null)
+            {
+                BodyParams.Add("ServerId", ServerId);
             }
 
             var httpResponseMessage = await httpClient.PostAsync(Globals.KaijuApiWebUrl, new FormUrlEncodedContent(BodyParams));

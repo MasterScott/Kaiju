@@ -74,13 +74,13 @@ class Kaiju
 
         $Url = $this->DiscordUrl . '/api/oauth2/token';
 
-        $BodyRequest = array(
+        $BodyRequest = http_build_query(array(
             "client_id" =>  $this->clientId,
             "client_secret" => $this->secretId,
             "grant_type" => "authorization_code",
             "code" => $_get['code'],
             "redirect_uri" => $this->redirectUrl
-        );
+        ));
 
         $RequestResponse = KaijuRequest::SendRequest($Url, true, $BodyRequest);
 

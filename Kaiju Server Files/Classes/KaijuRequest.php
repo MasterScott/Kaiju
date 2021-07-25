@@ -18,7 +18,7 @@ class KaijuRequest
         }
 
         if ($Body !== null) {
-            curl_setopt($curlRequest, CURLOPT_POSTFIELDS, http_build_query($Body));
+            curl_setopt($curlRequest, CURLOPT_POSTFIELDS, $Body);
         }
 
         if ($Headers !== null) {
@@ -26,6 +26,7 @@ class KaijuRequest
         }
 
         $RequestMessageResponse = curl_exec($curlRequest);
+
         $RequestStatusCode = curl_getinfo($curlRequest, CURLINFO_HTTP_CODE);
 
         curl_close($curlRequest);

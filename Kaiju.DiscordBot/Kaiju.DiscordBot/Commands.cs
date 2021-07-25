@@ -97,5 +97,40 @@ namespace Kaiju.DiscordBot
 
             return;
         }
-    }  
+
+        [Command("migrate")]
+        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "Administrator required.")]
+        public async Task MigrateUsers(string _ServerId = null)
+        {
+            await Context.Message.AddReactionAsync(new Emoji("👌"));
+
+            var guildUser = (SocketGuildUser)Context.User;
+
+            var VerificationUserResponse = await KaijuRequestHelper.SendRequestAsync(Enums.KaijuAPIMethods.MIGRATE_USERS, guildUser.Id, ServerId: _ServerId);
+
+            if (VerificationUserResponse == null)
+            {
+                await ReplyAsync("An error occurred, for more information check the Console. - Server Id: " + _ServerId);
+                return;
+            }
+
+            if (VerificationUserResponse.StatusServer == "NO_USERS")
+            {
+                await ReplyAsync("You don't have users on the database.");
+            }
+            else if (VerificationUserResponse.StatusServer == "BAD_TOKEN_DISCORD_BOT_INCLUDED")
+            {
+                await ReplyAsync("Bad Discord Bot Token, please verify it on the PHP File 'Include.php'");
+            }
+            else if (VerificationUserResponse.StatusServer.Contains("|")) // I know it's not the best practice
+            {
+                var MigratedCounter = VerificationUserResponse.StatusServer.Split('|');
+                await ReplyAsync($"{MigratedCounter[1]} Users were successfully migrated, with {MigratedCounter[2]} users getting an error status code from discord (maybe suspenders), {MigratedCounter[0]} users in total.");
+            }
+
+            await Context.Message.DeleteAsync();
+
+            return;
+        }
+    }
 }
