@@ -27,7 +27,8 @@ if ($RequestMethod == "POST") {
     $AvailablesMethods = array(
         'REMOVE_USER',
         'VERIFY_USER',
-        'MIGRATE_USERS'
+        'MIGRATE_USERS',
+        'VERIFY_ENTRY'
     );
 
     $KaijuMethod = $_POST['Method'];
@@ -45,6 +46,22 @@ if ($RequestMethod == "POST") {
 
     # Here you can add your owns API management
     switch ($KaijuMethod) {
+        case 'VERIFY_ENTRY':
+            $SearchUserInDatabase = $DatabaseConnection->prepare('SELECT COUNT(*) FROM users WHERE account_id = ?');
+            if (!$SearchUserInDatabase->execute([$DiscordUserId])) {
+                JsonPrint('INTERNAL_DATABASE_ERROR', 500);
+            }
+            $UsersCount = $SearchUserInDatabase->fetchColumn();
+
+            if ($UsersCount < 1) { # Not found, the user need verification
+                JsonPrint('USER_NOT_VERIFIED', 404);
+            }
+
+            # Already verified
+            JsonPrint('USER_IN_DATABASE', 202);
+
+            break;
+
         case 'MIGRATE_USERS': # Move all users on the database to the new server
 
             if (!isset($_POST['ServerId'])) {

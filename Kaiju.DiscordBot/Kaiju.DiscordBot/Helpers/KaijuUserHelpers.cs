@@ -14,9 +14,9 @@ namespace Kaiju.DiscordBot.Helpers
 
         internal static async Task EntryValidationAsync(IGuildUser User)
         {
-            var EntryValidationResponse = await KaijuRequestHelper.SendRequestAsync(KaijuAPIMethods.VERIFY_USER, User.Id);
+            var EntryValidationResponse = await KaijuRequestHelper.SendRequestAsync(KaijuAPIMethods.VERIFY_ENTRY, User.Id);
 
-            if (EntryValidationResponse.StatusServer == "USER_VERIFIED" && !User.RoleIds.Any(x => x == Globals.VerifiedRank))
+            if (EntryValidationResponse.StatusServer == "USER_IN_DATABASE" && !User.RoleIds.Any(x => x == Globals.VerifiedRank))
             {
                 try
                 {
@@ -26,7 +26,7 @@ namespace Kaiju.DiscordBot.Helpers
                 {
                     try
                     {
-                        await User.SendMessageAsync("Hey, I don't have permissions to give the role with the Id '{Globals.VerifiedRank}', please tell to staff to position me above of the verified rank it and make sure I have the necessary permissions.");
+                        await User.SendMessageAsync($"Hey, I don't have permissions to give the role with the Id '{Globals.VerifiedRank}', please tell to staff to position me above of the verified rank it and make sure I have the necessary permissions.");
                     }
                     catch
                     {

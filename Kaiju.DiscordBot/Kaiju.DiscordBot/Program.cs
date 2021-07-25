@@ -36,7 +36,7 @@ namespace Kaiju.DiscordBot
             _client.Log += async log =>
             {
                 Console.WriteLine(log);
-                await Task.Delay(1);
+                await Task.CompletedTask;
             };
 
             if (!File.Exists("settings.json"))
@@ -70,7 +70,7 @@ namespace Kaiju.DiscordBot
             _client.UserBanned += RemoveAuthenticatedUserAsync; // If someone is banned, they will be removed from the authentication
 
             await _client.LoginAsync(TokenType.Bot, Settings.BotToken);
-            
+
             await _client.StartAsync();
 
             await Task.Delay(-1);
@@ -81,17 +81,17 @@ namespace Kaiju.DiscordBot
             if (arg is SocketUserMessage message)
             {
                 var context = new SocketCommandContext(_client, message);
-  
+
                 int argPos = 0;
 
-                if (message.HasStringPrefix(Globals.BotPrefix, ref argPos)) 
+                if (message.HasStringPrefix(Globals.BotPrefix, ref argPos))
                 {
-                    var CommandExecResponse = await _commands.ExecuteAsync(context, argPos, _services);
+                    /*var CommandExecResponse = */await _commands.ExecuteAsync(context, argPos, _services);
 
-                    if (CommandExecResponse.IsSuccess is false)
-                    {
-                        Console.WriteLine(CommandExecResponse.ErrorReason);
-                    }
+                    //if (CommandExecResponse.IsSuccess is false)
+                    //{
+                    //    Console.WriteLine(CommandExecResponse.ErrorReason);
+                    //}
                 }
             }                 
         }
